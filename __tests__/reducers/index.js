@@ -3,6 +3,7 @@ import songChangeReducer from './../../src/reducers/songChangeReducer';
 import lyricChangeReducer from './../../src/reducers/lyricChangeReducer';
 import rootReducer from './../../src/reducers/';
 import { createStore } from 'redux';
+import * as actions from './../../src/actions';
 
 describe('Karaoke App', () => {
   const { initialState, types } = constants;
@@ -13,13 +14,47 @@ describe('Karaoke App', () => {
       expect(lyricChangeReducer(initialState.songsById, { type: null })).toEqual(initialState.songsById);
     });
 
-    it('Should update currently-displayed lyric of song', () => {
+    it('Should update currently-displayed lyric of song OLD', () => {
       expect(lyricChangeReducer(initialState.songsById, { type: 'NEXT_LYRIC', currentSongId: 2 })[2].arrayPosition).toEqual(initialState.songsById[2].arrayPosition + 1);
     });
 
-    it('Should restart song', () => {
+    it('Should update currently-displayed lyric of song NEW', () => {
+      expect(lyricChangeReducer(initialState.songsById, actions.nextLyric(2))[2].arrayPosition).toEqual(initialState.songsById[2].arrayPosition + 1);
+    });
+
+    it('Should restart song OLD', () => {
       expect(lyricChangeReducer(initialState.songsById, { type: 'RESTART_SONG', currentSongId: 1 })[1].arrayPosition).toEqual(0);
     });
+
+      it('Should restart song NEW', () => {
+        expect(lyricChangeReducer(initialState.songsById, actions.restartSong(1))[1].arrayPosition).toEqual(0);
+    });
+
+      it('Should update state when API lyrics are being requested.', () => {
+        const action = actions.requestSong('crocodile rock');
+        const newStateEntry = {
+          isFetching: true,
+          title: action.title,
+          songId: action.SongId,
+        };
+        expect(lyricChangeReducer(initialState.songsById, action)[action.songId]).toEqual(newStateEntry)
+      })
+
+      it('Update state on receive song', () => {
+      const action = actions.receiveSong('kiss', 'prince', 1, ['you don\'t have to be beautiful', 'to turn me on']);
+        const newObject = {
+          isFetching: false,
+          title: action.title,
+          artist: action.artist,
+          songId: action.songId,
+          receivedAt: action.receivedAt,
+          songArray: action.songArray,
+          arrayPosition: 0
+        };
+        expect(lyricChangeReducer(initialState.songsById, action)[action.songId])
+        .toEqual(newObject);
+      });
+
   });
 
   describe('songChangeReducer', () => {
@@ -27,8 +62,12 @@ describe('Karaoke App', () => {
       expect(songChangeReducer(initialState, { type: null })).toEqual(initialState);
     });
 
-    it('Should change selectedSong.', () => {
+    it('Should change selectedSong OLD.', () => {
       expect(songChangeReducer(initialState, { type: 'CHANGE_SONG', newSelectedSongId: 1 })).toEqual(1);
+    });
+
+    it('Should change selectedSong NEW.', () => {
+      expect(songChangeReducer(initialState.currentSongId, actions.changeSong(2))).toEqual(2);
     });
   });
 
